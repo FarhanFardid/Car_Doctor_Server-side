@@ -50,6 +50,39 @@ async function run() {
         res.send(result);
     })
 
+    // app.get('/bookings', async (req,res)=>{
+    //   const cursor = bookingCollection.find()
+    //   const result = await cursor.toArray()
+    //   res.send(result)
+    // })
+
+    app.get('/bookings', async (req,res)=> {
+      let query ={};
+      if(req.query?.email){
+        query = {email : req.query.email}
+      }
+      const result = await bookingCollection.find(query).toArray();
+      res.send(result);
+    })
+
+app.patch('/bookings/:id', async(req,res)=> {
+  const id = req.params.id;
+  const booking= req.body;
+  const filter={_id: new ObjectId(id)}
+console.log(booking);
+  const upDoc ={$set:{
+      status : booking.status
+  }};
+  const result = await bookingCollection.updateOne(filter,upDoc)
+  res.send(result)
+})
+
+app.delete('/bookings/:id', async(req,res)=> {
+  const id = req.params.id;
+  const query = {_id: new ObjectId(id)}
+  const result = await bookingCollection.deleteOne(query);
+  res.send(result);
+})
     app.post('/bookings', async(req,res)=>{
       console.log('Booking Api hitting');
       const booking = req.body;
