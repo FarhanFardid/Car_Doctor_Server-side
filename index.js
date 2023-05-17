@@ -35,6 +35,7 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
     const serviceCollection = client.db("CarDB").collection("services");
+    const bookingCollection = client.db("CarDB").collection("bookings");
 
     app.get('/services',async (req,res)=>{
         const cursor = serviceCollection.find()
@@ -47,6 +48,13 @@ async function run() {
         const query = {_id: new ObjectId(id)}
         const result = await serviceCollection.findOne(query)
         res.send(result);
+    })
+
+    app.post('/bookings', async(req,res)=>{
+      console.log('Booking Api hitting');
+      const booking = req.body;
+      const result = await bookingCollection.insertOne(booking)
+      res.send(result);
     })
 
 
