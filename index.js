@@ -30,11 +30,47 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   }
 });
+// Verify JWT 
+const  verifyJWT = (req,res,next) =>{
+  const authorization = req.headers.authorization;
+  // console.log(authorization);
+  if(!authorization){
+    return res.status(401).send({error:true, message: "Unauthorized access"})
+  }
+  const token  = authorization.split(' ')[1];
+  console.log(token);
+  jwt.verify(token, process.env.Access_Token_Secret, (error,decoded)=>{
+if(error){
+  return res.status(401).send({error:true, message: "Unauthorized access"})
+}
+req.decoded = decoded;
+next();
+  })
+
+}
+
+// const verifyJWT = (req,res,next) =>{
+//   const authorization = req.headers.authorization;
+//   console.log(authorization)
+//   if(!authorization){
+//     return res.status(401).send({error:true, message:'unauthorized access'})
+//   }
+//   const token = authorization.split(' ')[1];
+//   console.log(token);
+//   jwt.verify(token, process.env.Access_Token_Secret,(error,decoded)=>{
+//     if(error){
+//       return res.status(401).send({error: true, message: "unauthorized access"})
+//     }
+//     req.decoded = decoded;
+//     next();
+//   })
+// }
 
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
+     client.connect();
     const serviceCollection = client.db("CarDB").collection("services");
     const bookingCollection = client.db("CarDB").collection("bookings");
 
@@ -66,9 +102,16 @@ app.post('/jwt', (req,res)=>{
     //   res.send(result)
     // })
 
-    app.get('/bookings', async (req,res)=> {
+    app.get('/bookings',verifyJWT, async (req,res)=> {
+      // console.log(req.headers)
+      const decoded = req.decoded;
+      // console.log(decoded)
       let query ={};
-      if(req.query?.email){
+      if(decoded.email !== req.query?.email){
+        return res.status(403).send({error:1, message:'Forbidden Access'})
+      }
+      else
+      {
         query = {email : req.query.email}
       }
       const result = await bookingCollection.find(query).toArray();
